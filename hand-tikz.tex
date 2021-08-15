@@ -1,0 +1,88 @@
+% include the following in your preamble (needs the TikZ decorations library and pgfmath)
+% to produce graphs that look kind of hand-drawn.
+% I might add an example if I find the time.
+% Note that this decoration (due to the large amount of computations)
+% significantly increases compilation time.
+
+\def\mysegmentlength{}
+\def\myveer{}
+\def\mysupportb{}
+%\pgfmathparse{rand}
+\pgfmathparse{1}
+\let\mysupportb\pgfmathresult
+\pgfmathparse{0}
+\let\myveer\pgfmathresult
+
+% set aspect to 10 for paths, something else for nodes
+\pgfdeclaredecoration{handdrawn}{initial}{
+    \state{initial}[%
+        persistent precomputation=%
+        \pgfmathparse{\pgfdecoratedpathlength / \pgfdecorationsegmentaspect * (0.9+(rand/5)) }%
+        \let\mysegmentlength\pgfmathresult,
+        width=0,
+        next state=curve
+    ]{}
+    \state{curve}[
+        persistent precomputation=%
+        \pgfmathparse{(\mysupportb < \myveer) ? (\myveer + (\mysegmentlength * 0.1 * rnd)) : (\myveer - (\mysegmentlength * 0.1 * rnd)) }%
+        \let\mysupporta\pgfmathresult%
+        \pgfmathparse{\mysegmentlength * 0.1 * rand}%
+        \let\mysupportb\pgfmathresult%
+        \pgfmathparse{\mysegmentlength * 0.10pt * rand}%
+        \let\myveer\pgfmathresult,
+        switch if less than=2*\mysegmentlength to final,
+        width=\mysegmentlength,
+        persistent postcomputation=% this has to be a postcomputation
+        % since values computed in the precomputation are not
+        % available at the time the "width" key is set
+        \pgfmathparse{\pgfdecoratedpathlength / \pgfdecorationsegmentaspect * (0.9+(rand/5))}%
+        \let\mysegmentlength\pgfmathresult%
+    ]{
+    \pgfmathparse{\mysegmentlength / 3}
+    \let\mythird\pgfmathresult
+    \pgfmathparse{2 * \mysegmentlength / 3}
+    \let\mytwothirds\pgfmathresult
+\pgfpathcurveto%
+	{% 
+        \pgfpoint{\mythird}{\mysupporta}
+}
+%%
+{
+    \pgfpoint{\mytwothirds}{\mysupportb}
+}
+%
+{%TO 
+    \pgfpoint{\mysegmentlength}{\myveer}
+}
+}
+\state{final}[%
+        persistent postcomputation=%
+        \pgfmathparse{-1}%
+        \let\mysupportb\pgfmathresult%
+        \pgfmathparse{0}%
+        \let\myveer\pgfmathresult%
+    ]{
+    \pgfmathparse{\pgfdecoratedinputsegmentremainingdistance / 3}
+    \let\mythird\pgfmathresult
+    \pgfmathparse{2 * \pgfdecoratedinputsegmentremainingdistance / 3}
+    \let\mytwothirds\pgfmathresult
+    \pgfmathparse{rand * 1mm}
+    \let\mysupporta\pgfmathresult
+    \pgfmathparse{rand * 1mm}
+    \let\mysupportb\pgfmathresult
+\pgfpathcurveto%
+	{% 
+        \pgfpoint{\mythird}{\mysupporta}
+}
+%%
+{
+    \pgfpoint{\mytwothirds}{\mysupportb}
+}
+%
+{%TO 
+    \pgfpointdecoratedpathlast
+}
+%
+}
+}
+
